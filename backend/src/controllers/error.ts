@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from "express";
-
+import z from "zod";
 interface CustomError extends Error {
   statusCode?: number;
   status?: string;
@@ -18,6 +18,12 @@ export default (
 };
 
 const sendErrorDev = (err: CustomError, res: Response) => {
+  if (err instanceof z.ZodError) {
+    return res.status(400).json({
+      status: 'fail',
+      errors: err.errors.map((error) => error.path.join('.') + ': ' + error.message),
+    });
+  }
   res.status(err.statusCode!).json({
     status: err.status,
     message: err.message,

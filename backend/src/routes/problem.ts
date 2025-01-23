@@ -3,7 +3,7 @@ import { createProblem, submitProblem } from "../controllers/problem"
 
 const router = express.Router()
 
-router.get("/create-problem",createProblem)
-router.get("/submit",submitProblem)
+router.post("/create-problem",createProblem)
+router.post("/submit",submitProblem)
 
 export default router
