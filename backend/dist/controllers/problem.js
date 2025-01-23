@@ -14,51 +14,35 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.submitProblem = exports.accessProblem = exports.createProblem = void 0;
 const client_1 = require("@prisma/client");
-const zod_1 = __importDefault(require("zod"));
 const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
 const redisClient_1 = __importDefault(require("../utils/redisClient"));
+const types_1 = require("../utils/types");
+const aws_1 = require("../utils/aws");
 const prisma = new client_1.PrismaClient();
 const client = redisClient_1.default.getInstance().getClient();
-const problemSchema = zod_1.default.object({
-    title: zod_1.default.string().min(1, "Title is required"),
-    description: zod_1.default.string().min(1, "Description is required"),
-    difficulty: zod_1.default.enum(["EASY", "MEDIUM", "HARD"]).optional(),
-    inputFormat: zod_1.default.string().min(1, "Input format is required"),
-    outputFormat: zod_1.default.string().min(1, "Output format is required"),
-    constraints: zod_1.default.string().min(1, "Constraints are required"),
-    functionSignature: zod_1.default.string().min(1, "Function signature is required"),
-    inputFile: zod_1.default
-        .instanceof(File)
-        .refine((file) => file.size < 1000000, {
-        message: "File size must be less than 1MB",
-    })
-        .refine((file) => file.type === "text/plain", {
-        message: "File must be a text file",
-    }),
-    outputFile: zod_1.default
-        .instanceof(File)
-        .refine((file) => file.size < 1000000, {
-        message: "File size must be less than 1MB",
-    })
-        .refine((file) => file.type === "text/plain", {
-        message: "File must be a text file",
-    }),
-});
-var Language;
-(function (Language) {
-    Language["PYTHON"] = "PYTHON";
-    Language["JAVASCRIPT"] = "JAVASCRIPT";
-})(Language || (Language = {}));
-const submitSchema = zod_1.default.object({
-    code: zod_1.default.string().min(1, "Code is required"),
-    problemId: zod_1.default.number().int().positive(),
-    language: zod_1.default.enum(["PYTHON", "JAVASCRIPT"]),
-});
 exports.createProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b, _c, _d;
     req.user = 1;
-    const problemData = problemSchema.parse(req.body);
+    const problemData = types_1.problemSchema.parse(req.body);
+    yield prisma.problem.deleteMany();
+    const parsed = {
+        // @ts-ignore
+        inputFile: types_1.multerFileSchema.parse((_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.inputFile) === null || _b === void 0 ? void 0 : _b[0]), // Ensure proper indexing
+        // @ts-ignore
+        outputFile: types_1.multerFileSchema.parse((_d = (_c = req.files) === null || _c === void 0 ? void 0 : _c.outputFile) === null || _d === void 0 ? void 0 : _d[0]),
+    };
     const newProblem = yield prisma.problem.create({
         data: Object.assign(Object.assign({}, problemData), { authorId: req.user }),
+    });
+    yield (0, aws_1.uploadFile)({
+        originalname: `${newProblem.id}/input.txt`,
+        buffer: parsed.inputFile.buffer,
+        mimetype: parsed.inputFile.mimetype,
+    });
+    yield (0, aws_1.uploadFile)({
+        originalname: `${newProblem.id}/output.txt`,
+        buffer: parsed.outputFile.buffer,
+        mimetype: parsed.outputFile.mimetype,
     });
     res.status(201).json({
         status: "success",
@@ -70,6 +54,7 @@ exports.createProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
 exports.accessProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     const problems = yield prisma.problem.findUnique({
         where: {
+            // @ts-ignore
             id: parseInt(req.params.id),
         },
     });
@@ -82,34 +67,31 @@ exports.accessProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
 }));
 exports.submitProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     req.user = 1;
-    const submitData = submitSchema.parse(req.body);
+    const submitData = types_1.submitSchema.parse(req.body);
     const completedCode = yield getCompletedCode(submitData.problemId, submitData.code, submitData.language);
     console.log(completedCode);
-    // client.lPush(
-    //   "submissions",
-    //   JSON.stringify({
-    //     code: completedCode,
-    //     problemId: submitData.problemId,
-    //     userId: req.user,
-    //     language: submitData.language,
-    //   })
-    // );
-    // const submission = await prisma.problemSubmission.create({
-    //   data: {
-    //     code: submitData.code,
-    //     problemId: submitData.problemId,
-    //     language: submitData.language,
-    //     status: "PENDING",
-    //     userId: req.user,
-    //     testCasesResults: "",
-    //     memory: 0,
-    //     time: 0,
-    //   },
-    // });
+    client.lPush("submissions", JSON.stringify({
+        code: completedCode,
+        problemId: submitData.problemId,
+        userId: req.user,
+        language: submitData.language,
+    }));
+    const submission = yield prisma.problemSubmission.create({
+        data: {
+            code: submitData.code,
+            problemId: submitData.problemId,
+            language: submitData.language,
+            status: "PENDING",
+            userId: req.user,
+            testCasesResults: "",
+            memory: 0,
+            time: 0,
+        },
+    });
     res.status(200).json({
         status: "success",
         data: {
-        // submission,
+            submission,
         },
     });
 }));
@@ -124,10 +106,10 @@ function getCompletedCode(id, code, language) {
             throw new Error("Problem not found");
         }
         const test_inputs = ["[1,2,3]", "[4,5,6]"];
-        if (language === Language.JAVASCRIPT) {
+        if (language === types_1.Language.JAVASCRIPT) {
             return getJavascriptTemplate(code, test_inputs, problem);
         }
-        else if (language === Language.PYTHON) {
+        else if (language === types_1.Language.PYTHON) {
             return getPythonTemplate(code, test_inputs, problem);
         }
         else {
@@ -140,7 +122,7 @@ const getJavascriptTemplate = (code, test_inputs, problem) => {
     ${code}
     console.log("final test cases logs");
     ${test_inputs
-        .map((input) => `${problem.functionSignature}(${input}));`)
+        .map((input, index) => `console.log("Test case ${index + 1}: ",${problem.functionSignature}(${input}));`)
         .join("\n")}
     `;
 };

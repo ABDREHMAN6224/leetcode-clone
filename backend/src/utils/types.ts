@@ -1,5 +1,13 @@
 import { z } from "zod";
 
+export const multerFileSchema = z.object({
+  buffer: z.instanceof(Buffer), 
+  size: z.number().max(1000000, { message: "File size must be less than 1MB" }), 
+  mimetype: z.string().refine((type) => type === "text/plain", {
+    message: "File must be a text file",
+  }),
+});
+
 export const problemSchema = z.object({
     title: z.string().min(1, "Title is required"),
     description: z.string().min(1, "Description is required"),
@@ -8,22 +16,6 @@ export const problemSchema = z.object({
     outputFormat: z.string().min(1, "Output format is required"),
     constraints: z.string().min(1, "Constraints are required"),
     functionSignature: z.string().min(1, "Function signature is required"),
-    inputFile: z
-      .instanceof(File)
-      .refine((file) => file.size < 1000000, {
-        message: "File size must be less than 1MB",
-      })
-      .refine((file) => file.type === "text/plain", {
-        message: "File must be a text file",
-      }),
-    outputFile: z
-      .instanceof(File)
-      .refine((file) => file.size < 1000000, {
-        message: "File size must be less than 1MB",
-      })
-      .refine((file) => file.type === "text/plain", {
-        message: "File must be a text file",
-      }),
   });
   
 export enum Language {

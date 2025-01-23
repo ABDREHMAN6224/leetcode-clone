@@ -4,11 +4,14 @@ import dotenv from "dotenv"
 import AppError from "./utils/AppError"
 import errorController from "./controllers/error";
 import SingletonRedisClient from "./utils/redisClient";
+import multer from 'multer';
+
 dotenv.config()
 
 const app = express()
 const client = SingletonRedisClient.getInstance().getClient()
 app.use(express.json())
+
 
 app.use("/api", problemRouter)
 

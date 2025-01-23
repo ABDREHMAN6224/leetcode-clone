@@ -1,9 +1,10 @@
 import { PrismaClient, Problem } from "@prisma/client";
-import { Request, Response, NextFunction } from "express";
-import z from "zod";
+import {  Response, NextFunction } from "express";
 import catchAsync from "../utils/catchAsync";
 import SingletonRedisClient from "../utils/redisClient";
-import { CustomRequest, problemSchema,Language,submitSchema } from "../utils/types";
+import { CustomRequest, problemSchema,Language,submitSchema, multerFileSchema } from "../utils/types";
+import { uploadFile } from "../utils/aws";
+import { processFile } from "../utils/helper";
 
 const prisma = new PrismaClient();
 const client = SingletonRedisClient.getInstance().getClient();
@@ -14,6 +15,12 @@ export const createProblem = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     req.user = 1;
     const problemData = problemSchema.parse(req.body);
+    const parsed = {
+      // @ts-ignore
+      inputFile: multerFileSchema.parse(req.files?.inputFile?.[0]), // Ensure proper indexing
+      // @ts-ignore
+      outputFile: multerFileSchema.parse(req.files?.outputFile?.[0]),
+    };
 
     const newProblem = await prisma.problem.create({
       data: {
@@ -21,6 +28,19 @@ export const createProblem = catchAsync(
         authorId: req.user,
       },
     });
+   
+    
+    await uploadFile({
+      originalname: `${newProblem.id}/input.txt`,
+      buffer: parsed.inputFile.buffer,
+      mimetype: parsed.inputFile.mimetype,
+    });
+    await uploadFile({
+      originalname: `${newProblem.id}/output.txt`,
+      buffer: parsed.outputFile.buffer,
+      mimetype: parsed.outputFile.mimetype,
+    });
+
 
     res.status(201).json({
       status: "success",
@@ -52,38 +72,37 @@ export const submitProblem = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     req.user = 1;
     const submitData = submitSchema.parse(req.body);
-
     const completedCode = await getCompletedCode(
       submitData.problemId,
       submitData.code,
       submitData.language as Language
     );
     console.log(completedCode);
-    // client.lPush(
-    //   "submissions",
-    //   JSON.stringify({
-    //     code: completedCode,
-    //     problemId: submitData.problemId,
-    //     userId: req.user,
-    //     language: submitData.language,
-    //   })
-    // );
-    // const submission = await prisma.problemSubmission.create({
-    //   data: {
-    //     code: submitData.code,
-    //     problemId: submitData.problemId,
-    //     language: submitData.language,
-    //     status: "PENDING",
-    //     userId: req.user,
-    //     testCasesResults: "",
-    //     memory: 0,
-    //     time: 0,
-    //   },
-    // });
+    client.lPush(
+      "submissions",
+      JSON.stringify({
+        code: completedCode,
+        problemId: submitData.problemId,
+        userId: req.user,
+        language: submitData.language,
+      })
+    );
+    const submission = await prisma.problemSubmission.create({
+      data: {
+        code: submitData.code,
+        problemId: submitData.problemId,
+        language: submitData.language,
+        status: "PENDING",
+        userId: req.user,
+        testCasesResults: "",
+        memory: 0,
+        time: 0,
+      },
+    });
     res.status(200).json({
       status: "success",
       data: {
-        // submission,
+        submission,
       },
     });
   }

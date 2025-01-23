@@ -11,6 +11,7 @@ exports.default = (err, req, res, next) => {
 };
 const sendErrorDev = (err, res) => {
     if (err instanceof zod_1.default.ZodError) {
+        console.log(err.message);
         return res.status(400).json({
             status: 'fail',
             errors: err.errors.map((error) => error.path.join('.') + ': ' + error.message),

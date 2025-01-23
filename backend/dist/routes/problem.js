@@ -5,7 +5,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const problem_1 = require("../controllers/problem");
+const multer_1 = __importDefault(require("multer"));
 const router = express_1.default.Router();
-router.post("/create-problem", problem_1.createProblem);
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
+router.post("/create-problem", upload.fields([{ name: 'inputFile' }, { name: 'outputFile' }]), problem_1.createProblem);
 router.post("/submit", problem_1.submitProblem);
 exports.default = router;

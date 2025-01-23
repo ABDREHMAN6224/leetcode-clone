@@ -19,6 +19,7 @@ export default (
 
 const sendErrorDev = (err: CustomError, res: Response) => {
   if (err instanceof z.ZodError) {
+    console.log(err.message);
     return res.status(400).json({
       status: 'fail',
       errors: err.errors.map((error) => error.path.join('.') + ': ' + error.message),
