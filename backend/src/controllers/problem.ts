@@ -78,16 +78,15 @@ export const submitProblem = catchAsync(
       submitData.code,
       submitData.language as Language
     );
-    console.log(completedCode);
-    // client.lPush(
-    //   "submissions",
-    //   JSON.stringify({
-    //     code: completedCode,
-    //     problemId: submitData.problemId,
-    //     userId: req.user,
-    //     language: submitData.language,
-    //   })
-    // );
+    client.lPush(
+      "submissions",
+      JSON.stringify({
+        code: completedCode,
+        problemId: submitData.problemId,
+        userId: req.user,
+        language: submitData.language,
+      })
+    );
     // const submission = await prisma.problemSubmission.create({
     //   data: {
     //     code: submitData.code,
@@ -146,14 +145,17 @@ const getJavascriptTemplate = (
   return `
     ${code}
     console.log("final test cases logs");
+    const finalResults = [];
     ${test_inputs
       .map(
         (input, index) =>
-          `${
+          `
+          finalResults.push(${
             problem.functionSignature
-          }(${input}));`
-      )
-      .join("\n")}
+            }(${input}))`
+      ).join("\n")
+    }
+    console.log(JSON.stringify(finalResults));
     `;
 };
 
@@ -165,13 +167,18 @@ const getPythonTemplate = (
   return `
     ${code}
     print("final test cases logs")
+    finalResults = []
     ${test_inputs
       .map(
         (input, index) =>
-          `${
+            `
+          finalResults.append(
+        ${
             problem.functionSignature
           }(${input}))`
       )
       .join("\n")}
-    `;
+      print(finalResults)
+    `
+    ;
 };

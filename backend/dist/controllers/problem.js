@@ -68,16 +68,12 @@ exports.submitProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
     req.user = 1;
     const submitData = types_1.submitSchema.parse(req.body);
     const completedCode = yield getCompletedCode(submitData.problemId, submitData.code, submitData.language);
-    console.log(completedCode);
-    // client.lPush(
-    //   "submissions",
-    //   JSON.stringify({
-    //     code: completedCode,
-    //     problemId: submitData.problemId,
-    //     userId: req.user,
-    //     language: submitData.language,
-    //   })
-    // );
+    client.lPush("submissions", JSON.stringify({
+        code: completedCode,
+        problemId: submitData.problemId,
+        userId: req.user,
+        language: submitData.language,
+    }));
     // const submission = await prisma.problemSubmission.create({
     //   data: {
     //     code: submitData.code,
@@ -128,9 +124,11 @@ const getJavascriptTemplate = (code, test_inputs, problem) => {
     return `
     ${code}
     console.log("final test cases logs");
+    const finalResults = [];
     ${test_inputs
-        .map((input, index) => `console.log("Test case ${index + 1}: ",${problem.functionSignature}(${input}));`)
-        .join("\n")}
+        .map((input, index) => `
+          finalResults.push(${problem.functionSignature}(${input}))`).join("\n")}
+    console.log(JSON.stringify(finalResults));
     `;
 };
 const getPythonTemplate = (code, test_inputs, problem) => {
@@ -138,7 +136,7 @@ const getPythonTemplate = (code, test_inputs, problem) => {
     ${code}
     print("final test cases logs")
     ${test_inputs
-        .map((input, index) => `print("Test case ${index + 1}: ",${problem.functionSignature}(${input}))`)
+        .map((input, index) => `${problem.functionSignature}(${input})`)
         .join("\n")}
     `;
 };
