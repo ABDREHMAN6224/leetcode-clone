@@ -9,9 +9,9 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadFile = void 0;
+exports.uploadFile = exports.s3 = void 0;
 const aws_sdk_1 = require("aws-sdk");
-const s3 = new aws_sdk_1.S3({
+exports.s3 = new aws_sdk_1.S3({
     accessKeyId: process.env.AWS_ACCESS_KEY,
     secretAccessKey: process.env.AWS_SECRET_KEY,
     endpoint: process.env.AWS_ENDPOINT,
@@ -22,7 +22,7 @@ const uploadFile = (file) => __awaiter(void 0, void 0, void 0, function* () {
         Key: file.originalname,
         Body: file.buffer,
     };
-    const res = yield s3.upload(params).promise();
+    const res = yield exports.s3.upload(params).promise();
     return res.Location;
 });
 exports.uploadFile = uploadFile;

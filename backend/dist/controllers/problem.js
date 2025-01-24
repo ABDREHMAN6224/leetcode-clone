@@ -24,7 +24,6 @@ exports.createProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
     var _a, _b, _c, _d;
     req.user = 1;
     const problemData = types_1.problemSchema.parse(req.body);
-    yield prisma.problem.deleteMany();
     const parsed = {
         // @ts-ignore
         inputFile: types_1.multerFileSchema.parse((_b = (_a = req.files) === null || _a === void 0 ? void 0 : _a.inputFile) === null || _b === void 0 ? void 0 : _b[0]), // Ensure proper indexing
@@ -35,12 +34,12 @@ exports.createProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
         data: Object.assign(Object.assign({}, problemData), { authorId: req.user }),
     });
     yield (0, aws_1.uploadFile)({
-        originalname: `${newProblem.id}/input.txt`,
+        originalname: `problems/${newProblem.id}/input.txt`,
         buffer: parsed.inputFile.buffer,
         mimetype: parsed.inputFile.mimetype,
     });
     yield (0, aws_1.uploadFile)({
-        originalname: `${newProblem.id}/output.txt`,
+        originalname: `problems/${newProblem.id}/output.txt`,
         buffer: parsed.outputFile.buffer,
         mimetype: parsed.outputFile.mimetype,
     });
@@ -70,33 +69,37 @@ exports.submitProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
     const submitData = types_1.submitSchema.parse(req.body);
     const completedCode = yield getCompletedCode(submitData.problemId, submitData.code, submitData.language);
     console.log(completedCode);
-    client.lPush("submissions", JSON.stringify({
-        code: completedCode,
-        problemId: submitData.problemId,
-        userId: req.user,
-        language: submitData.language,
-    }));
-    const submission = yield prisma.problemSubmission.create({
-        data: {
-            code: submitData.code,
-            problemId: submitData.problemId,
-            language: submitData.language,
-            status: "PENDING",
-            userId: req.user,
-            testCasesResults: "",
-            memory: 0,
-            time: 0,
-        },
-    });
+    // client.lPush(
+    //   "submissions",
+    //   JSON.stringify({
+    //     code: completedCode,
+    //     problemId: submitData.problemId,
+    //     userId: req.user,
+    //     language: submitData.language,
+    //   })
+    // );
+    // const submission = await prisma.problemSubmission.create({
+    //   data: {
+    //     code: submitData.code,
+    //     problemId: submitData.problemId,
+    //     language: submitData.language,
+    //     status: "PENDING",
+    //     userId: req.user,
+    //     testCasesResults: "",
+    //     memory: 0,
+    //     time: 0,
+    //   },
+    // });
     res.status(200).json({
         status: "success",
         data: {
-            submission,
+        // submission,
         },
     });
 }));
 function getCompletedCode(id, code, language) {
     return __awaiter(this, void 0, void 0, function* () {
+        var _a;
         const problem = yield prisma.problem.findUnique({
             where: {
                 id,
@@ -105,7 +108,11 @@ function getCompletedCode(id, code, language) {
         if (!problem) {
             throw new Error("Problem not found");
         }
-        const test_inputs = ["[1,2,3]", "[4,5,6]"];
+        const test_file = yield aws_1.s3.getObject({
+            Bucket: process.env.AWS_BUCKET_NAME,
+            Key: `problems/${id}/input.txt`,
+        }).promise();
+        const test_inputs = ((_a = test_file.Body) === null || _a === void 0 ? void 0 : _a.toString().split("\n")) || [];
         if (language === types_1.Language.JAVASCRIPT) {
             return getJavascriptTemplate(code, test_inputs, problem);
         }

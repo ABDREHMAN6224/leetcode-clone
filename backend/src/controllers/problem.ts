@@ -3,8 +3,9 @@ import {  Response, NextFunction } from "express";
 import catchAsync from "../utils/catchAsync";
 import SingletonRedisClient from "../utils/redisClient";
 import { CustomRequest, problemSchema,Language,submitSchema, multerFileSchema } from "../utils/types";
-import { uploadFile } from "../utils/aws";
+import { s3, uploadFile } from "../utils/aws";
 import { processFile } from "../utils/helper";
+import { S3 } from "aws-sdk";
 
 const prisma = new PrismaClient();
 const client = SingletonRedisClient.getInstance().getClient();
@@ -31,12 +32,12 @@ export const createProblem = catchAsync(
    
     
     await uploadFile({
-      originalname: `${newProblem.id}/input.txt`,
+      originalname: `problems/${newProblem.id}/input.txt`,
       buffer: parsed.inputFile.buffer,
       mimetype: parsed.inputFile.mimetype,
     });
     await uploadFile({
-      originalname: `${newProblem.id}/output.txt`,
+      originalname: `problems/${newProblem.id}/output.txt`,
       buffer: parsed.outputFile.buffer,
       mimetype: parsed.outputFile.mimetype,
     });
@@ -78,31 +79,31 @@ export const submitProblem = catchAsync(
       submitData.language as Language
     );
     console.log(completedCode);
-    client.lPush(
-      "submissions",
-      JSON.stringify({
-        code: completedCode,
-        problemId: submitData.problemId,
-        userId: req.user,
-        language: submitData.language,
-      })
-    );
-    const submission = await prisma.problemSubmission.create({
-      data: {
-        code: submitData.code,
-        problemId: submitData.problemId,
-        language: submitData.language,
-        status: "PENDING",
-        userId: req.user,
-        testCasesResults: "",
-        memory: 0,
-        time: 0,
-      },
-    });
+    // client.lPush(
+    //   "submissions",
+    //   JSON.stringify({
+    //     code: completedCode,
+    //     problemId: submitData.problemId,
+    //     userId: req.user,
+    //     language: submitData.language,
+    //   })
+    // );
+    // const submission = await prisma.problemSubmission.create({
+    //   data: {
+    //     code: submitData.code,
+    //     problemId: submitData.problemId,
+    //     language: submitData.language,
+    //     status: "PENDING",
+    //     userId: req.user,
+    //     testCasesResults: "",
+    //     memory: 0,
+    //     time: 0,
+    //   },
+    // });
     res.status(200).json({
       status: "success",
       data: {
-        submission,
+        // submission,
       },
     });
   }
@@ -119,7 +120,14 @@ async function getCompletedCode(id: number, code: string, language: Language) {
     throw new Error("Problem not found");
   }
 
-  const test_inputs = ["[1,2,3]", "[4,5,6]"];
+  const test_file = await s3.getObject({
+    Bucket: process.env.AWS_BUCKET_NAME!,
+    Key: `problems/${id}/input.txt`,
+  }).promise();
+
+   const test_inputs = test_file.Body?.toString().split("\n") || [];
+  
+
 
   if (language === Language.JAVASCRIPT) {
     return getJavascriptTemplate(code, test_inputs, problem);
@@ -141,7 +149,7 @@ const getJavascriptTemplate = (
     ${test_inputs
       .map(
         (input, index) =>
-          `console.log("Test case ${index + 1}: ",${
+          `${
             problem.functionSignature
           }(${input}));`
       )
@@ -160,7 +168,7 @@ const getPythonTemplate = (
     ${test_inputs
       .map(
         (input, index) =>
-          `print("Test case ${index + 1}: ",${
+          `${
             problem.functionSignature
           }(${input}))`
       )
