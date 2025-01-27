@@ -61,27 +61,47 @@ async function processSubmission(submission: string) {
     });
     await container.start();
 
+    
+    
+    
     const stream = await container.logs({
         follow: true,
         stdout: true,
         stderr: true,
     });
-
-    let output = "";
-
+    
+    let output_chunks:string[] = [];
+    
     stream.on("data", (chunk) => {
-        output += chunk.toString();
+        output_chunks.push(chunk.toString());
     });
+  
 
-    await container.wait();
+    const {StatusCode}=await container.wait();
+
+    const stdout = output_chunks.join("");
+    
+    if (StatusCode !== 0) {
+        console.error("Error occurred while running the container:");
+        console.log("stderror", stdout);
+        await container.remove();
+        return ;
+        // throw new Error(`Container exited with status code ${StatusCode}`);
+    }
+    
 
     await container.remove();
     // delete the directory
     fs.rmdirSync(codeDir, { recursive: true });
 
-    const lines = output.trim().split("\n");
-    const finalResults = JSON.parse(lines[lines.length - 1]);
-    console.log(finalResults);
+    const lines = stdout.trim().split("\n");
+    try {
+        const finalResults = JSON.parse(lines[lines.length - 1]);
+        console.log(finalResults);
+    } catch (error) {
+        // this means that user code has some error
+        console.log("Error", error);
+    }
 
     
 

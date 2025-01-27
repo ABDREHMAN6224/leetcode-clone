@@ -135,8 +135,12 @@ const getPythonTemplate = (code, test_inputs, problem) => {
     return `
     ${code}
     print("final test cases logs")
+    finalResults = []
     ${test_inputs
-        .map((input, index) => `${problem.functionSignature}(${input})`)
+        .map((input, index) => `
+          finalResults.append(
+        ${problem.functionSignature}(${input}))`)
         .join("\n")}
+      print(finalResults)
     `;
 };
