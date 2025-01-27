@@ -84,9 +84,13 @@ async function processSubmission(submission: string) {
     if (StatusCode !== 0) {
         console.error("Error occurred while running the container:");
         console.log("stderror", stdout);
+        client.lPush(`results-${userId}`, JSON.stringify({
+            problemId,
+            status: "error",
+            error: stdout,
+        }));
         await container.remove();
         return ;
-        // throw new Error(`Container exited with status code ${StatusCode}`);
     }
     
 
