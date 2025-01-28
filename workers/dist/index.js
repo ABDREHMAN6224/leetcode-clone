@@ -116,7 +116,7 @@ function processSubmission(submission) {
                 client.publish(`results-${userId}`, JSON.stringify({
                     problemId,
                     status: "error",
-                    error: stdout.trim(),
+                    results: stdout.trim(),
                 }));
             }
             else {
@@ -130,7 +130,7 @@ function processSubmission(submission) {
             client.publish(`results-${userId}`, JSON.stringify({
                 problemId,
                 status: error.message === "Timeout" ? "TLE" : "error",
-                error: error.message,
+                results: error.message,
             }));
         }
         finally {

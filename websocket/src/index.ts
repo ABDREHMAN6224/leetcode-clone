@@ -15,10 +15,10 @@ wss.on("connection",async (ws: WebSocket) => {
         case "join":
             console.log("Joining user", payload);
             userToSocket.set(payload, ws);
-            subscriber.subscribe(`results-${payload}`, (err, count) => {
-                if (err) {
-                  console.error(err);
-                }
+            subscriber.subscribe(`results-${payload}`, (data, count) => {
+                console.log("Subscribed to results", count);
+                const {problemId,status,results} = JSON.parse(data);
+                ws.send(JSON.stringify({type: "results", payload: {problemId,status,results}}));
             });
             break;
     
@@ -37,10 +37,4 @@ wss.on("connection",async (ws: WebSocket) => {
   });
 });
 
-subscriber.on("message", (channel, message) => {
-    const data  = JSON.parse(message);
-    console.log(data);
-});
-
-console.log("WebSocket server started at ws://localhost:8080");
 

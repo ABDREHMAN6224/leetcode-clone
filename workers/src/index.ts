@@ -131,7 +131,7 @@ async function processSubmission(submission: string) {
         JSON.stringify({
           problemId,
           status: "error",
-          error: stdout.trim(),
+          results: stdout.trim(),
         })
       );
     } else {
@@ -147,7 +147,7 @@ async function processSubmission(submission: string) {
       JSON.stringify({
         problemId,
         status: error.message === "Timeout" ? "TLE" : "error",
-        error: error.message,
+        results: error.message,
       })
     );
   } finally {
