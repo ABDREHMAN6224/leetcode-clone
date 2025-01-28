@@ -4,8 +4,8 @@ import catchAsync from "../utils/catchAsync";
 import SingletonRedisClient from "../utils/redisClient";
 import { CustomRequest, problemSchema,Language,submitSchema, multerFileSchema } from "../utils/types";
 import { s3, uploadFile } from "../utils/aws";
-import { processFile } from "../utils/helper";
-import { S3 } from "aws-sdk";
+
+
 
 const prisma = new PrismaClient();
 const client = SingletonRedisClient.getInstance().getClient();
@@ -143,19 +143,18 @@ const getJavascriptTemplate = (
   problem: Problem
 ) => {
   return `
+  const finalResults = [];
+  ${test_inputs
+    .map(
+      (input, index) =>
+        `
+        finalResults.push(${
+          problem.functionSignature
+          }(${input}))`
+    ).join("\n")
+  }
+  console.log(JSON.stringify(finalResults));
     ${code}
-    console.log("final test cases logs");
-    const finalResults = [];
-    ${test_inputs
-      .map(
-        (input, index) =>
-          `
-          finalResults.push(${
-            problem.functionSignature
-            }(${input}))`
-      ).join("\n")
-    }
-    console.log(JSON.stringify(finalResults));
     `;
 };
 

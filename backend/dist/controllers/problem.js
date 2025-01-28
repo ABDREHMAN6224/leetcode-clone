@@ -122,13 +122,12 @@ function getCompletedCode(id, code, language) {
 }
 const getJavascriptTemplate = (code, test_inputs, problem) => {
     return `
-    ${code}
-    console.log("final test cases logs");
-    const finalResults = [];
-    ${test_inputs
+  const finalResults = [];
+  ${test_inputs
         .map((input, index) => `
-          finalResults.push(${problem.functionSignature}(${input}))`).join("\n")}
-    console.log(JSON.stringify(finalResults));
+        finalResults.push(${problem.functionSignature}(${input}))`).join("\n")}
+  console.log(JSON.stringify(finalResults));
+    ${code}
     `;
 };
 const getPythonTemplate = (code, test_inputs, problem) => {
