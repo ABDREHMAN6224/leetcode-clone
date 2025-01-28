@@ -10,7 +10,31 @@ import { s3, uploadFile } from "../utils/aws";
 const prisma = new PrismaClient();
 const client = SingletonRedisClient.getInstance().getClient();
 
+type Request2 = CustomRequest & { params: { id: string } };
 
+
+export const updateProblem = catchAsync(async (req: Request2, res: Response, next: NextFunction) => {
+  // @ts-ignore
+  const {status} = req.body;
+  console.log(req.body)
+  const submissionId = parseInt(req.params.id);
+  req.user =1
+  const submission = await prisma.problemSubmission.update({
+    where: {
+      id: submissionId,
+    },
+    data: {
+      status,
+    },
+  });
+
+  res.status(200).json({
+    status: "success",
+    data: {
+      submission,
+    },
+  });
+})
 
 export const createProblem = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
@@ -78,27 +102,28 @@ export const submitProblem = catchAsync(
       submitData.code,
       submitData.language as Language
     );
+    const submission = await prisma.problemSubmission.create({
+      data: {
+        code: submitData.code,
+        problemId: submitData.problemId,
+        language: submitData.language,
+        status: "PENDING",
+        userId: req.user,
+        testCasesResults: "",
+        memory: 0,
+        time: 0,
+      },
+    });
     client.lPush(
       "submissions",
       JSON.stringify({
+        submissionId:submission.id,
         code: completedCode,
         problemId: submitData.problemId,
         userId: req.user,
         language: submitData.language,
       })
     );
-    // const submission = await prisma.problemSubmission.create({
-    //   data: {
-    //     code: submitData.code,
-    //     problemId: submitData.problemId,
-    //     language: submitData.language,
-    //     status: "PENDING",
-    //     userId: req.user,
-    //     testCasesResults: "",
-    //     memory: 0,
-    //     time: 0,
-    //   },
-    // });
     res.status(200).json({
       status: "success",
       data: {

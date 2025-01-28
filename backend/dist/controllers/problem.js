@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitProblem = exports.accessProblem = exports.createProblem = void 0;
+exports.submitProblem = exports.accessProblem = exports.createProblem = exports.updateProblem = void 0;
 const client_1 = require("@prisma/client");
 const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
 const redisClient_1 = __importDefault(require("../utils/redisClient"));
@@ -20,6 +20,27 @@ const types_1 = require("../utils/types");
 const aws_1 = require("../utils/aws");
 const prisma = new client_1.PrismaClient();
 const client = redisClient_1.default.getInstance().getClient();
+exports.updateProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    // @ts-ignore
+    const { status } = req.body;
+    console.log(req.body);
+    const submissionId = parseInt(req.params.id);
+    req.user = 1;
+    const submission = yield prisma.problemSubmission.update({
+        where: {
+            id: submissionId,
+        },
+        data: {
+            status,
+        },
+    });
+    res.status(200).json({
+        status: "success",
+        data: {
+            submission,
+        },
+    });
+}));
 exports.createProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
     req.user = 1;
@@ -68,24 +89,25 @@ exports.submitProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
     req.user = 1;
     const submitData = types_1.submitSchema.parse(req.body);
     const completedCode = yield getCompletedCode(submitData.problemId, submitData.code, submitData.language);
+    const submission = yield prisma.problemSubmission.create({
+        data: {
+            code: submitData.code,
+            problemId: submitData.problemId,
+            language: submitData.language,
+            status: "PENDING",
+            userId: req.user,
+            testCasesResults: "",
+            memory: 0,
+            time: 0,
+        },
+    });
     client.lPush("submissions", JSON.stringify({
+        submissionId: submission.id,
         code: completedCode,
         problemId: submitData.problemId,
         userId: req.user,
         language: submitData.language,
     }));
-    // const submission = await prisma.problemSubmission.create({
-    //   data: {
-    //     code: submitData.code,
-    //     problemId: submitData.problemId,
-    //     language: submitData.language,
-    //     status: "PENDING",
-    //     userId: req.user,
-    //     testCasesResults: "",
-    //     memory: 0,
-    //     time: 0,
-    //   },
-    // });
     res.status(200).json({
         status: "success",
         data: {

@@ -10,4 +10,5 @@ const router = express_1.default.Router();
 const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 router.post("/create-problem", upload.fields([{ name: 'inputFile' }, { name: 'outputFile' }]), problem_1.createProblem);
 router.post("/submit", problem_1.submitProblem);
+router.put("/submissions/:id", problem_1.updateProblem);
 exports.default = router;

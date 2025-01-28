@@ -1,6 +1,8 @@
 import {WebSocket,WebSocketServer} from "ws";
 import { createClient } from "redis";
 
+const BACKEND_URL = "http://localhost:3000";
+
 
 const subscriber = createClient();
 const userToSocket = new Map<string, WebSocket>();
@@ -13,12 +15,18 @@ wss.on("connection",async (ws: WebSocket) => {
     const {type, payload} = JSON.parse(message);
     switch (type) {
         case "join":
-            console.log("Joining user", payload);
             userToSocket.set(payload, ws);
-            subscriber.subscribe(`results-${payload}`, (data, count) => {
-                console.log("Subscribed to results", count);
-                const {problemId,status,results} = JSON.parse(data);
+            subscriber.subscribe(`results-${payload}`, async(data, count) => {
+                const {problemId,status,results,submissionId} = JSON.parse(data);
                 ws.send(JSON.stringify({type: "results", payload: {problemId,status,results}}));
+                const res = await fetch(`${BACKEND_URL}/api/submissions/${submissionId}`, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({status}),
+                })
+                console.log(await res.json());
             });
             break;
     

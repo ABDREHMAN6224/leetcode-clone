@@ -42,7 +42,7 @@ const getCommandForLanguage = (language) => {
     };
     return commands[language];
 };
-function compareResults(problemId, userId, results) {
+function compareResults(problemId, userId, submissionId, results) {
     return __awaiter(this, void 0, void 0, function* () {
         var _a;
         const file = yield aws_1.s3
@@ -57,15 +57,15 @@ function compareResults(problemId, userId, results) {
             output: output.trim(),
         }));
         const status = finalResults.every((result) => result.input == result.output)
-            ? "accepted"
-            : "wrong answer";
+            ? "ACCEPTED"
+            : "WRONG_ANSWER";
         console.log("Final Results:", finalResults);
-        client.publish(`results-${userId}`, JSON.stringify({ problemId, status, results: finalResults }));
+        client.publish(`results-${userId}`, JSON.stringify({ problemId, status, results: finalResults, submissionId }));
     });
 }
 function processSubmission(submission) {
     return __awaiter(this, void 0, void 0, function* () {
-        const { problemId, userId, code, language } = JSON.parse(submission);
+        const { problemId, userId, code, language, submissionId } = JSON.parse(submission);
         const image = getImageForLanguage(language);
         const extension = getFileExtensionForLanguage(language);
         const command = getCommandForLanguage(language);
@@ -114,22 +114,24 @@ function processSubmission(submission) {
             if (StatusCode !== 0) {
                 console.error("Error occurred while running the container:", stdout);
                 client.publish(`results-${userId}`, JSON.stringify({
+                    submissionId,
                     problemId,
-                    status: "error",
+                    status: "RUNTIME_ERROR",
                     results: stdout.trim(),
                 }));
             }
             else {
                 const lines = stdout.trim().split("\n");
                 const finalResults = JSON.parse(lines[0]);
-                yield compareResults(problemId, userId, finalResults);
+                yield compareResults(problemId, userId, submissionId, finalResults);
             }
         }
         catch (error) {
             console.error("Error during container execution:", error.message);
             client.publish(`results-${userId}`, JSON.stringify({
+                submissionId,
                 problemId,
-                status: error.message === "Timeout" ? "TLE" : "error",
+                status: error.message === "Timeout" ? "TIME_LIMIT_EXCEEDED" : "RUNTIME_ERROR",
                 results: error.message,
             }));
         }

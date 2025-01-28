@@ -35,7 +35,7 @@ const getCommandForLanguage = (language: string) => {
   return commands[language];
 };
 
-async function compareResults(problemId: number, userId: number, results: any) {
+async function compareResults(problemId: number, userId: number,submissionId:number, results: any) {
   const file = await s3
     .getObject({
       Bucket: process.env.AWS_BUCKET_NAME!,
@@ -52,19 +52,19 @@ async function compareResults(problemId: number, userId: number, results: any) {
   const status = finalResults.every(
     (result) => result.input == result.output
   )
-    ? "accepted"
-    : "wrong answer";
+    ? "ACCEPTED"
+    : "WRONG_ANSWER";
 
     console.log("Final Results:", finalResults);
 
   client.publish(
     `results-${userId}`,
-    JSON.stringify({ problemId, status, results: finalResults })
+    JSON.stringify({ problemId, status, results: finalResults,submissionId})
   );
 }
 
 async function processSubmission(submission: string) {
-  const { problemId, userId, code, language } = JSON.parse(submission);
+  const { problemId, userId, code, language,submissionId } = JSON.parse(submission);
   const image = getImageForLanguage(language);
   const extension = getFileExtensionForLanguage(language);
   const command = getCommandForLanguage(language);
@@ -129,15 +129,16 @@ async function processSubmission(submission: string) {
       client.publish(
         `results-${userId}`,
         JSON.stringify({
+          submissionId,
           problemId,
-          status: "error",
+          status: "RUNTIME_ERROR",
           results: stdout.trim(),
         })
       );
     } else {
       const lines = stdout.trim().split("\n");
       const finalResults = JSON.parse(lines[0]);
-      await compareResults(problemId, userId, finalResults);
+      await compareResults(problemId, userId,submissionId, finalResults);
     }
   } catch (error: any) {
     console.error("Error during container execution:", error.message);
@@ -145,8 +146,9 @@ async function processSubmission(submission: string) {
     client.publish(
       `results-${userId}`,
       JSON.stringify({
+        submissionId,
         problemId,
-        status: error.message === "Timeout" ? "TLE" : "error",
+        status: error.message === "Timeout" ? "TIME_LIMIT_EXCEEDED" : "RUNTIME_ERROR",
         results: error.message,
       })
     );
