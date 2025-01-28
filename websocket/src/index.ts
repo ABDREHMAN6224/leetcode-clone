@@ -26,7 +26,6 @@ wss.on("connection",async (ws: WebSocket) => {
                     },
                     body: JSON.stringify({status}),
                 })
-                console.log(await res.json());
             });
             break;
     

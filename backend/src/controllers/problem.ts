@@ -16,7 +16,6 @@ type Request2 = CustomRequest & { params: { id: string } };
 export const updateProblem = catchAsync(async (req: Request2, res: Response, next: NextFunction) => {
   // @ts-ignore
   const {status} = req.body;
-  console.log(req.body)
   const submissionId = parseInt(req.params.id);
   req.user =1
   const submission = await prisma.problemSubmission.update({
