@@ -55,6 +55,8 @@ async function compareResults(problemId: number, userId: number, results: any) {
     ? "accepted"
     : "wrong answer";
 
+    console.log("Final Results:", finalResults);
+
   client.publish(
     `results-${userId}`,
     JSON.stringify({ problemId, status, results: finalResults })

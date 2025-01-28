@@ -59,6 +59,7 @@ function compareResults(problemId, userId, results) {
         const status = finalResults.every((result) => result.input == result.output)
             ? "accepted"
             : "wrong answer";
+        console.log("Final Results:", finalResults);
         client.publish(`results-${userId}`, JSON.stringify({ problemId, status, results: finalResults }));
     });
 }
