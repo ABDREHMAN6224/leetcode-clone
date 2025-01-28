@@ -38,7 +38,6 @@ wss.on("connection",async (ws: WebSocket) => {
 });
 
 subscriber.on("message", (channel, message) => {
-    console.log(channel, message);
     const data  = JSON.parse(message);
     console.log(data);
 });
