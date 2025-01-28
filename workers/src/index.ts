@@ -50,7 +50,7 @@ async function compareResults(problemId: number, userId: number, results: any) {
   }));
 
   const status = finalResults.every(
-    (result) => result.input === result.output
+    (result) => result.input == result.output
   )
     ? "accepted"
     : "wrong answer";
