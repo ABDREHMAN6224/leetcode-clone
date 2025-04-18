@@ -160,9 +160,8 @@ function startWorker() {
                 if (msg) {
                     try {
                         const submission = msg.content.toString();
-                        console.log("Received message:", submission);
-                        // await processSubmission(submission);
-                        // channel.ack(msg);
+                        yield processSubmission(submission);
+                        channel.ack(msg);
                     }
                     catch (error) {
                         console.error("Error processing message:", error);

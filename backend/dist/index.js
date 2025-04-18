@@ -17,10 +17,9 @@ const problem_1 = __importDefault(require("./routes/problem"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const AppError_1 = __importDefault(require("./utils/AppError"));
 const error_1 = __importDefault(require("./controllers/error"));
-const redisClient_1 = __importDefault(require("./utils/redisClient"));
 dotenv_1.default.config();
+console.log(process.env.DATABSE_URL);
 const app = (0, express_1.default)();
-const client = redisClient_1.default.getInstance().getClient();
 app.use(express_1.default.json());
 app.use("/api", problem_1.default);
 app.all("*", (req, res, next) => {
@@ -29,8 +28,6 @@ app.all("*", (req, res, next) => {
 app.use(error_1.default);
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
-        yield client.connect();
-        console.log("Connected to Redis");
         app.listen(3000, () => {
             console.log("Server is running on port 3000");
         });

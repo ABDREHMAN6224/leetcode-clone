@@ -3,13 +3,10 @@ import problemRouter from "./routes/problem"
 import dotenv from "dotenv"
 import AppError from "./utils/AppError"
 import errorController from "./controllers/error";
-import SingletonRedisClient from "./utils/redisClient";
-import multer from 'multer';
 
 dotenv.config()
-
+console.log(process.env.DATABSE_URL)
 const app = express()
-const client = SingletonRedisClient.getInstance().getClient()
 app.use(express.json())
 
 
@@ -22,8 +19,6 @@ app.all("*", (req:any, res:any,next:NextFunction) => {
 app.use(errorController);
 
 async function main(){
-    await client.connect();
-    console.log("Connected to Redis");
     app.listen(3000, () => {
         console.log("Server is running on port 3000")
     })

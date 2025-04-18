@@ -15,15 +15,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.submitProblem = exports.accessProblem = exports.createProblem = exports.updateProblem = void 0;
 const client_1 = require("@prisma/client");
 const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
-const redisClient_1 = __importDefault(require("../utils/redisClient"));
 const types_1 = require("../utils/types");
 const aws_1 = require("../utils/aws");
+const rabbitmqClient_1 = require("../utils/rabbitmqClient");
 const prisma = new client_1.PrismaClient();
-const client = redisClient_1.default.getInstance().getClient();
 exports.updateProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
     const { status } = req.body;
-    console.log(req.body);
     const submissionId = parseInt(req.params.id);
     req.user = 1;
     const submission = yield prisma.problemSubmission.update({
@@ -43,7 +41,7 @@ exports.updateProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
 }));
 exports.createProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
-    req.user = 1;
+    req.user = 2;
     const problemData = types_1.problemSchema.parse(req.body);
     const parsed = {
         // @ts-ignore
@@ -54,16 +52,18 @@ exports.createProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
     const newProblem = yield prisma.problem.create({
         data: Object.assign(Object.assign({}, problemData), { authorId: req.user }),
     });
-    yield (0, aws_1.uploadFile)({
-        originalname: `problems/${newProblem.id}/input.txt`,
-        buffer: parsed.inputFile.buffer,
-        mimetype: parsed.inputFile.mimetype,
-    });
-    yield (0, aws_1.uploadFile)({
-        originalname: `problems/${newProblem.id}/output.txt`,
-        buffer: parsed.outputFile.buffer,
-        mimetype: parsed.outputFile.mimetype,
-    });
+    yield Promise.all([
+        yield (0, aws_1.uploadFile)({
+            originalname: `problems/${newProblem.id}/input.txt`,
+            buffer: parsed.inputFile.buffer,
+            mimetype: parsed.inputFile.mimetype,
+        }),
+        yield (0, aws_1.uploadFile)({
+            originalname: `problems/${newProblem.id}/output.txt`,
+            buffer: parsed.outputFile.buffer,
+            mimetype: parsed.outputFile.mimetype,
+        })
+    ]);
     res.status(201).json({
         status: "success",
         data: {
@@ -101,17 +101,17 @@ exports.submitProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
             time: 0,
         },
     });
-    client.lPush("submissions", JSON.stringify({
+    rabbitmqClient_1.RabbitMqClient.getInstance().sendToQueue({
         submissionId: submission.id,
         code: completedCode,
         problemId: submitData.problemId,
         userId: req.user,
         language: submitData.language,
-    }));
+    });
     res.status(200).json({
         status: "success",
         data: {
-        // submission,
+            submission,
         },
     });
 }));
@@ -130,7 +130,7 @@ function getCompletedCode(id, code, language) {
             Bucket: process.env.AWS_BUCKET_NAME,
             Key: `problems/${id}/input.txt`,
         }).promise();
-        const test_inputs = ((_a = test_file.Body) === null || _a === void 0 ? void 0 : _a.toString().split("\n")) || [];
+        const test_inputs = (((_a = test_file.Body) === null || _a === void 0 ? void 0 : _a.toString().split("\n")) || []).filter((input) => input.trim() !== "");
         if (language === types_1.Language.JAVASCRIPT) {
             return getJavascriptTemplate(code, test_inputs, problem);
         }
@@ -145,6 +145,7 @@ function getCompletedCode(id, code, language) {
 const getJavascriptTemplate = (code, test_inputs, problem) => {
     return `
   const finalResults = [];
+
   ${test_inputs
         .map((input, index) => `
         finalResults.push(${problem.functionSignature}(${input}))`).join("\n")}

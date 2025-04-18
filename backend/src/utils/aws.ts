@@ -9,7 +9,7 @@ export const s3 = new S3({
 interface MyFile {
     originalname: string;
     buffer: Buffer; 
-    mimetype: string;    // Optional MIME type for better handling
+    mimetype: string;    
     
 }
 

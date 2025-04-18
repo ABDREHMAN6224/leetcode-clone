@@ -8,7 +8,6 @@ import { RabbitMqClient } from "../utils/rabbitmqClient";
 
 
 const prisma = new PrismaClient();
-// const rmq = SingletonRedisClient.getInstance().getClient();
 
 type Request2 = CustomRequest & { params: { id: string } };
 
@@ -37,7 +36,7 @@ export const updateProblem = catchAsync(async (req: Request2, res: Response, nex
 
 export const createProblem = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
-    req.user = 1;
+    req.user = 2;
     const problemData = problemSchema.parse(req.body);
     const parsed = {
       // @ts-ignore
@@ -148,7 +147,9 @@ async function getCompletedCode(id: number, code: string, language: Language) {
     Key: `problems/${id}/input.txt`,
   }).promise();
 
-   const test_inputs = test_file.Body?.toString().split("\n") || [];
+   const test_inputs = (test_file.Body?.toString().split("\n") || []).filter(
+    (input) => input.trim() !== ""
+  );
   
 
 
@@ -168,6 +169,7 @@ const getJavascriptTemplate = (
 ) => {
   return `
   const finalResults = [];
+
   ${test_inputs
     .map(
       (input, index) =>
