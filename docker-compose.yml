@@ -1,0 +1,76 @@
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    container_name: backend
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - rabbitmq
+    networks:
+      - app-network
+  postgres:
+    image: postgres:latest
+    container_name: postgres
+    env_file:
+      - .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+  rabbitmq:
+    image: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    networks:
+      - app-network
+
+  websocket-1:
+    build: ./websocket
+    container_name: websocket-1
+    ports:
+      - "8001:8080"
+    volumes:
+      - ./websocket:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    networks:
+      - app-network
+  websocket-2:
+    build: ./websocket
+    container_name: websocket-2
+    ports:
+      - "8002:8080"
+    volumes:
+      - ./websocket:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    networks:
+      - app-network
+  websocket-3:
+    build: ./websocket
+    container_name: websocket-3
+    ports:
+      - "8003:8080"
+    volumes:
+      - ./websocket:/app
+      - /app/node_modules
+    env_file:
+      - .env
+    depends_on:
+      - backend
+    networks:
+      - app-network

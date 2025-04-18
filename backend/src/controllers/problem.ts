@@ -1,14 +1,14 @@
 import { PrismaClient, Problem } from "@prisma/client";
 import {  Response, NextFunction } from "express";
 import catchAsync from "../utils/catchAsync";
-import SingletonRedisClient from "../utils/redisClient";
 import { CustomRequest, problemSchema,Language,submitSchema, multerFileSchema } from "../utils/types";
 import { s3, uploadFile } from "../utils/aws";
+import { RabbitMqClientSingleton } from "../utils/rabbitmqClient";
 
 
 
 const prisma = new PrismaClient();
-const client = SingletonRedisClient.getInstance().getClient();
+// const rmq = SingletonRedisClient.getInstance().getClient();
 
 type Request2 = CustomRequest & { params: { id: string } };
 
@@ -53,17 +53,18 @@ export const createProblem = catchAsync(
       },
     });
    
-    
+    await Promise.all([
     await uploadFile({
       originalname: `problems/${newProblem.id}/input.txt`,
       buffer: parsed.inputFile.buffer,
       mimetype: parsed.inputFile.mimetype,
-    });
+    }),
     await uploadFile({
       originalname: `problems/${newProblem.id}/output.txt`,
       buffer: parsed.outputFile.buffer,
       mimetype: parsed.outputFile.mimetype,
-    });
+    })
+    ]);
 
 
     res.status(201).json({
@@ -113,16 +114,15 @@ export const submitProblem = catchAsync(
         time: 0,
       },
     });
-    client.lPush(
-      "submissions",
-      JSON.stringify({
-        submissionId:submission.id,
-        code: completedCode,
-        problemId: submitData.problemId,
-        userId: req.user,
-        language: submitData.language,
-      })
-    );
+
+    RabbitMqClientSingleton.getInstance().sendToQueue("problems", JSON.stringify({
+      submissionId: submission.id,
+      code: completedCode,
+      problemId: submitData.problemId,
+      userId: req.user,
+      language: submitData.language,
+    }))
+
     res.status(200).json({
       status: "success",
       data: {
