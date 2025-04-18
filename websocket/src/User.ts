@@ -15,16 +15,16 @@ export class User {
     emit(channel:string,message: any) {
                 if(channel.startsWith("result")){
                     console.log("result",message);
-                    // const {problemId,status,results,submissionId} = JSON.parse(message);
+                    const {problemId,status,results,submissionId} = JSON.parse(message);
 
-                    // fetch(`${BACKEND_URL}/api/submissions/${submissionId}`, {
-                    //     method: "PUT",
-                    //     headers: {
-                    //         "Content-Type": "application/json",
-                    //     },
-                    //     body: JSON.stringify({status}),
-                    // })
-                    // this.socket.send(JSON.stringify({type: "results", payload: {problemId,status,results}}));
+                    fetch(`${BACKEND_URL}/api/submissions/${submissionId}`, {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({status}),
+                    })
+                    this.socket.send(JSON.stringify({type: "results", payload: {problemId,status,results}}));
                 }
                 else{
 

@@ -41,7 +41,7 @@ exports.updateProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
 }));
 exports.createProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     var _a, _b, _c, _d;
-    req.user = 2;
+    req.user = 1;
     const problemData = types_1.problemSchema.parse(req.body);
     const parsed = {
         // @ts-ignore

@@ -36,7 +36,7 @@ export const updateProblem = catchAsync(async (req: Request2, res: Response, nex
 
 export const createProblem = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
-    req.user = 2;
+    req.user = 1;
     const problemData = problemSchema.parse(req.body);
     const parsed = {
       // @ts-ignore
