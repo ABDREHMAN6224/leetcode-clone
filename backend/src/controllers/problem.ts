@@ -3,7 +3,7 @@ import {  Response, NextFunction } from "express";
 import catchAsync from "../utils/catchAsync";
 import { CustomRequest, problemSchema,Language,submitSchema, multerFileSchema } from "../utils/types";
 import { s3, uploadFile } from "../utils/aws";
-import { RabbitMqClientSingleton } from "../utils/rabbitmqClient";
+import { RabbitMqClient } from "../utils/rabbitmqClient";
 
 
 
@@ -115,18 +115,18 @@ export const submitProblem = catchAsync(
       },
     });
 
-    RabbitMqClientSingleton.getInstance().sendToQueue("problems", JSON.stringify({
+    RabbitMqClient.getInstance().sendToQueue({
       submissionId: submission.id,
       code: completedCode,
       problemId: submitData.problemId,
       userId: req.user,
       language: submitData.language,
-    }))
+    })
 
     res.status(200).json({
       status: "success",
       data: {
-        // submission,
+        submission,
       },
     });
   }

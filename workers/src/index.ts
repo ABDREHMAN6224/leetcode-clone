@@ -3,6 +3,7 @@ import Docker from "dockerode";
 import fs from "fs";
 import { s3 } from "./aws";
 import dotenv from "dotenv";
+import amqp, { Channel } from "amqplib";
 dotenv.config();
 
 const docker = new Docker();
@@ -10,6 +11,13 @@ const docker = new Docker();
 const TIMEOUT = 5000;
 
 const client = createClient();
+
+const connectRabbitMq = async () => {
+  const connection = await amqp.connect("amqp://localhost");
+  const channel = await connection.createChannel();
+  await channel.assertQueue("problems", { durable: true });
+  return channel;
+}
 
 const getImageForLanguage = (language: string) => {
   const images: Record<string, string> = {
@@ -44,13 +52,13 @@ async function compareResults(problemId: number, userId: number,submissionId:num
     .promise();
 
   const outputs = file.Body?.toString().split("\n") || [];
-  const finalResults = outputs.map((output, index) => ({
+  const finalResults = outputs.map((output:any, index:number) => ({
     input: results[index],
     output: output.trim(),
   }));
 
   const status = finalResults.every(
-    (result) => result.input == result.output
+    (result:any) => result.input == result.output
   )
     ? "ACCEPTED"
     : "WRONG_ANSWER";
@@ -162,19 +170,21 @@ async function processSubmission(submission: string) {
 async function startWorker() {
   try {
     await client.connect();
-
-    while (true) {
-      try {
-        const submission = await client.brPop("submissions", 0);
-        if (!submission) {
-          continue;
+    const channel = await connectRabbitMq();
+    console.log("Connected to RabbitMQ");
+    channel.consume("problems", async (msg:any) => {
+      if (msg) {
+        try {
+          
+          const submission = msg.content.toString();
+          await processSubmission(submission);
+          channel.ack(msg);
+        } catch (error) {
+          console.error("Error processing message:", error);
+          channel.nack(msg, false, false); // Reject the message and do not requeue
         }
-
-        await processSubmission(submission.element);
-      } catch (error) {
-        console.log(error);
       }
-    }
+    });
   } catch (error) {
     console.error(error);
   }

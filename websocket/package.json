@@ -11,7 +11,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@types/amqplib": "^0.10.7",
     "@types/ws": "^8.5.14",
+    "amqplib": "^0.10.7",
     "redis": "^4.7.0",
     "ws": "^8.18.0"
   }

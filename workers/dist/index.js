@@ -17,10 +17,17 @@ const dockerode_1 = __importDefault(require("dockerode"));
 const fs_1 = __importDefault(require("fs"));
 const aws_1 = require("./aws");
 const dotenv_1 = __importDefault(require("dotenv"));
+const amqplib_1 = __importDefault(require("amqplib"));
 dotenv_1.default.config();
 const docker = new dockerode_1.default();
 const TIMEOUT = 5000;
 const client = (0, redis_1.createClient)();
+const connectRabbitMq = () => __awaiter(void 0, void 0, void 0, function* () {
+    const connection = yield amqplib_1.default.connect("amqp://localhost");
+    const channel = yield connection.createChannel();
+    yield channel.assertQueue("problems", { durable: true });
+    return channel;
+});
 const getImageForLanguage = (language) => {
     const images = {
         JAVASCRIPT: "node",
@@ -147,18 +154,22 @@ function startWorker() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
             yield client.connect();
-            while (true) {
-                try {
-                    const submission = yield client.brPop("submissions", 0);
-                    if (!submission) {
-                        continue;
+            const channel = yield connectRabbitMq();
+            console.log("Connected to RabbitMQ");
+            channel.consume("problems", (msg) => __awaiter(this, void 0, void 0, function* () {
+                if (msg) {
+                    try {
+                        const submission = msg.content.toString();
+                        console.log("Received message:", submission);
+                        // await processSubmission(submission);
+                        // channel.ack(msg);
                     }
-                    yield processSubmission(submission.element);
+                    catch (error) {
+                        console.error("Error processing message:", error);
+                        channel.nack(msg, false, false); // Reject the message and do not requeue
+                    }
                 }
-                catch (error) {
-                    console.log(error);
-                }
-            }
+            }));
         }
         catch (error) {
             console.error(error);
