@@ -34,8 +34,9 @@ services:
     volumes:
       - redis_data:/data
 
-
-
+  node:
+    image: node:latest
+    container_name: node
 
 volumes:
   postgres_data:
