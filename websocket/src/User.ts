@@ -1,5 +1,5 @@
-import { WebSocket } from 'ws';
 import { SubscriptionManager } from './SubscriptionManager';
+import { WebSocket } from 'ws';
 const BACKEND_URL = "http://localhost:3000";
 
 export class User {
@@ -15,7 +15,7 @@ export class User {
     emit(channel:string,message: any) {
                 if(channel.startsWith("result")){
                     console.log("result",message);
-                    const {problemId,status,results,submissionId} = JSON.parse(message);
+                    const {problemId,status,results,submissionId} = message;
 
                     fetch(`${BACKEND_URL}/api/submissions/${submissionId}`, {
                         method: "PUT",

@@ -21,11 +21,9 @@ const amqplib_1 = __importDefault(require("amqplib"));
 dotenv_1.default.config();
 const docker = new dockerode_1.default();
 const TIMEOUT = 5000;
-const client = (0, redis_1.createClient)({
-    url: "redis://redis:6379",
-});
+const client = (0, redis_1.createClient)();
 const connectRabbitMq = () => __awaiter(void 0, void 0, void 0, function* () {
-    const connection = yield amqplib_1.default.connect("amqp://rabbitmq:5672");
+    const connection = yield amqplib_1.default.connect("amqp://localhost");
     const channel = yield connection.createChannel();
     yield channel.assertQueue("problems", { durable: true });
     return channel;
