@@ -91,6 +91,18 @@ export const accessProblem = catchAsync(
   }
 );
 
+export const getAllProblems = catchAsync(
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    const problems = await prisma.problem.findMany();
+    res.status(200).json({
+      status: "success",
+      data: {
+        problems,
+      },
+    });
+  }
+)
+
 export const submitProblem = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     req.user = 1;
