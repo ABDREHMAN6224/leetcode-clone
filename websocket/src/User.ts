@@ -1,6 +1,6 @@
 import { SubscriptionManager } from './SubscriptionManager';
 import { WebSocket } from 'ws';
-const BACKEND_URL = "http://localhost:3000";
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:3000";
 
 export class User {
     private id: string;

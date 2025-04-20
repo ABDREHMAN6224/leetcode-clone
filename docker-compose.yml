@@ -1,6 +1,40 @@
 version: '3.8'
 
-services:
+services: 
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+
+  websocket:
+    build:
+      context: ./websocket
+      dockerfile: Dockerfile
+    container_name: websocket
+    ports:
+      - "8080:8080"
+    environment:
+      - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+      - REDIS_URL=redis://redis:6379/0
+      - BACKEND_URL=http://backend:3000
+    depends_on:
+      - postgres
+      - rabbitmq
+      - redis
+
  
   postgres:
     image: postgres:latest

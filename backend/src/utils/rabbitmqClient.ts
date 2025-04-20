@@ -8,7 +8,7 @@ export class RabbitMqClient{
     private connecting: boolean = false;
     private reconnectTimeout: NodeJS.Timeout|null = null;
 
-    private constructor(connectionUrl: string = 'amqp://localhost') {
+    private constructor(connectionUrl: string = process.env.RABBITMQ_URL || 'amqp://localhost') {
         this.connectionUrl = connectionUrl;
     }
     public static getInstance(connUrl?:string): RabbitMqClient {
