@@ -35,7 +35,7 @@ export default function CreateProblem() {
   }
 
   const uploadProblem = async () => {
-    setLoading(true)
+    // setLoading(true)
     const formData = new FormData()
     formData.append("title", problem.title)
     formData.append("description", problem.description)
@@ -45,14 +45,15 @@ export default function CreateProblem() {
     formData.append("constraints", problem.constraints)
     formData.append("inputFile", files[0] as File)
     formData.append("outputFile", files[1] as File)
-    console.log(formData)
     
-    const response = await fetch("http://backend:3000/api/create-problem", {
+    const response = await fetch("http://localhost:3000/api/create-problem", {
       method: "POST",
       body: formData,
     })
-    console.log(response, (await response.json()))
-    setLoading(false)
+    const data = await response.json();
+    console.log(data)
+
+    // setLoading(false)
   }
 
   return (
