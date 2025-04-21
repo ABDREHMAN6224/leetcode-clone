@@ -1,11 +1,27 @@
-import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { ProblemType } from "@/types";
 
-export default function Home() {
+const ProblemCard = ({problem}: {problem: ProblemType}) => {
+  const {title} = problem
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-24">
-      <Button>
-        Press ME
-      </Button>
+    <Card className="w-full flex flex-col gap-2">
+      <p className="font-bold text-2xl">{title}</p>
+    </Card>
+  )
+}
+
+export default async function Home() {
+
+  const { problems } = (await (await fetch("http://backend:3000/api/problems")).json()).data
+
+  return (
+    <div className="flex flex-col items-center justify-center gap-2 min-h-screen p-24">
+      <h1 className="text-4xl font-bold">Problems</h1>
+      <div className="flex flex-col gap-2">
+        {problems.map((problem: ProblemType) => (
+          <ProblemCard key={problem.title} problem={problem} />
+        ))}
+      </div>
     </div>
   );
 }
