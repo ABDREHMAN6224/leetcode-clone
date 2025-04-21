@@ -1,4 +1,6 @@
 export type ProblemType = {
+  id?: number
+  difficulty?: "EASY" | "MEDIUM" | "HARD"
   title: string
   description: string
   functionSignature: string
