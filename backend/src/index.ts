@@ -1,10 +1,12 @@
 import express, { NextFunction } from "express";
+
+import AppError from "./utils/AppError";
 import cluster from "cluster";
+import cors from "cors";
+import dotenv from "dotenv";
+import errorController from "./controllers/error";
 import os from "os";
 import problemRouter from "./routes/problem";
-import dotenv from "dotenv";
-import AppError from "./utils/AppError";
-import errorController from "./controllers/error";
 
 dotenv.config();
 console.log(process.env.DATABSE_URL);
@@ -24,6 +26,7 @@ if (cluster.isPrimary) {
     });
 } else {
     const app = express();
+    app.use(cors())
     app.use(express.json());
 
     app.use("/api", problemRouter);

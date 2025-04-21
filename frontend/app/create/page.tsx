@@ -1,12 +1,12 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { defaultProblem, dummyProblem } from "@/lib/constants"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { defaultProblem } from "@/lib/constants"
 import { useState } from "react"
 
 const Div = ({children, vertical=true}: {children: React.ReactNode, vertical?: boolean}) => {
@@ -21,6 +21,7 @@ type FileType = File | null
 
 export default function CreateProblem() {
 
+  const [loading, setLoading] = useState(false)
   const [problem, setProblem] = useState(defaultProblem)
   const [files, setFiles] = useState<[FileType, FileType]>([null, null])
 
@@ -34,6 +35,7 @@ export default function CreateProblem() {
   }
 
   const uploadProblem = async () => {
+    setLoading(true)
     const formData = new FormData()
     formData.append("title", problem.title)
     formData.append("description", problem.description)
@@ -43,17 +45,21 @@ export default function CreateProblem() {
     formData.append("constraints", problem.constraints)
     formData.append("inputFile", files[0] as File)
     formData.append("outputFile", files[1] as File)
-    const response = await fetch("/api/upload", {
+    console.log(formData)
+    
+    const response = await fetch("http://backend:3000/api/create-problem", {
       method: "POST",
       body: formData,
     })
+    console.log(response, (await response.json()))
+    setLoading(false)
   }
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-8">
       <Card className="w-full max-w-2xl">
         <CardHeader>
-          <CardTitle>Upload a Problem</CardTitle>
+          <CardTitle onClick={() => setProblem(dummyProblem)}>Upload a Problem</CardTitle>
           <CardDescription>Fill in the necessary information to create a new problem</CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -94,7 +100,7 @@ export default function CreateProblem() {
         </CardContent>
         <CardFooter>
           <Div vertical={false}>
-            <Button onClick={uploadProblem} className="flex gap-2">
+            <Button  onClick={uploadProblem} className="flex gap-2">
               Upload
               <svg className="size-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m14-7l-5-5l-5 5m5-5v12"/></svg>
             </Button>
