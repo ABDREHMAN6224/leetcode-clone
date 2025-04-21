@@ -94,7 +94,7 @@ export default function CreateProblem() {
         </CardContent>
         <CardFooter>
           <Div vertical={false}>
-            <Button className="flex gap-2">
+            <Button onClick={uploadProblem} className="flex gap-2">
               Upload
               <svg className="size-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m14-7l-5-5l-5 5m5-5v12"/></svg>
             </Button>
