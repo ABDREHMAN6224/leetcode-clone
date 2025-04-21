@@ -1,29 +1,40 @@
-import express, { NextFunction } from "express"
-import problemRouter from "./routes/problem"
-import dotenv from "dotenv"
-import AppError from "./utils/AppError"
+import express, { NextFunction } from "express";
+import cluster from "cluster";
+import os from "os";
+import problemRouter from "./routes/problem";
+import dotenv from "dotenv";
+import AppError from "./utils/AppError";
 import errorController from "./controllers/error";
 
-dotenv.config()
-console.log(process.env.DATABSE_URL)
-const app = express()
-app.use(express.json())
+dotenv.config();
+console.log(process.env.DATABSE_URL);
 
+const numCPUs = os.cpus().length;
 
-app.use("/api", problemRouter)
+if (cluster.isPrimary) {
+    console.log(`Primary process ${process.pid} is running`);
 
-app.all("*", (req:any, res:any,next:NextFunction) => {
-    next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404))
-})
+    for (let i = 0; i < numCPUs; i++) {
+        cluster.fork();
+    }
 
-app.use(errorController);
+    cluster.on("exit", (worker, code, signal) => {
+        console.log(`Worker ${worker.process.pid} died. Starting a new worker...`);
+        cluster.fork();
+    });
+} else {
+    const app = express();
+    app.use(express.json());
 
-async function main(){
+    app.use("/api", problemRouter);
+
+    app.all("*", (req: any, res: any, next: NextFunction) => {
+        next(new AppError(`Can't find ${req.originalUrl} on this server!`, 404));
+    });
+
+    app.use(errorController);
+
     app.listen(3000, () => {
-        console.log("Server is running on port 3000")
-    })
+        console.log(`Worker ${process.pid} is running on port 3000`);
+    });
 }
-
-main()
-
-
