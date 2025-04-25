@@ -93,7 +93,13 @@ export const accessProblem = catchAsync(
 
 export const getAllProblems = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
-    const problems = await prisma.problem.findMany();
+    const problems = (await prisma.problem.findMany(
+      {
+        orderBy: {
+          createdAt: "desc",
+        },
+      }
+    ));
     res.status(200).json({
       status: "success",
       data: {

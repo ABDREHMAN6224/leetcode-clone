@@ -11,4 +11,6 @@ const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage()
 router.post("/create-problem", upload.fields([{ name: 'inputFile' }, { name: 'outputFile' }]), problem_1.createProblem);
 router.post("/submit", problem_1.submitProblem);
 router.put("/submissions/:id", problem_1.updateProblem);
+router.get("/problems", problem_1.getAllProblems);
+router.get("/problems/:id", problem_1.accessProblem);
 exports.default = router;

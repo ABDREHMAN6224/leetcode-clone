@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { defaultProblem, dummyProblem } from "@/lib/constants"
 
 import { Button } from "@/components/ui/button"
@@ -35,10 +36,12 @@ export default function CreateProblem() {
   }
 
   const uploadProblem = async () => {
-    // setLoading(true)
+    if (loading) return;
+    setLoading(true)
     const formData = new FormData()
     formData.append("title", problem.title)
     formData.append("description", problem.description)
+    formData.append("difficulty", problem.difficulty || "EASY")
     formData.append("functionSignature", problem.functionSignature)
     formData.append("inputFormat", problem.inputFormat)
     formData.append("outputFormat", problem.outputFormat)
@@ -46,14 +49,12 @@ export default function CreateProblem() {
     formData.append("inputFile", files[0] as File)
     formData.append("outputFile", files[1] as File)
     
-    const response = await fetch("http://localhost:3000/api/create-problem", {
+    await fetch("http://localhost:3000/api/create-problem", {
       method: "POST",
       body: formData,
     })
-    const data = await response.json();
-    console.log(data)
 
-    // setLoading(false)
+    setLoading(false)
   }
 
   return (
@@ -100,12 +101,22 @@ export default function CreateProblem() {
           </Div>
         </CardContent>
         <CardFooter>
-          <Div vertical={false}>
+          <div className="flex w-full items-center justify-between">
             <Button  onClick={uploadProblem} className="flex gap-2">
               Upload
               <svg className="size-4" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4m14-7l-5-5l-5 5m5-5v12"/></svg>
             </Button>
-          </Div>
+            <Select onValueChange={(v) => setProblem(({...problem, difficulty: v as "EASY" | "MEDIUM" | "HARD"}))}>
+              <SelectTrigger>
+                <SelectValue placeholder="Difficulty" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="EASY">Easy</SelectItem>
+                <SelectItem value="MEDIUM">Medium</SelectItem>
+                <SelectItem value="HARD">Hard</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardFooter>
       </Card>
     </div>

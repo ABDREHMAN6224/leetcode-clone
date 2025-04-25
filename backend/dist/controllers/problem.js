@@ -12,12 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.submitProblem = exports.accessProblem = exports.createProblem = exports.updateProblem = void 0;
-const client_1 = require("@prisma/client");
-const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
+exports.submitProblem = exports.getAllProblems = exports.accessProblem = exports.createProblem = exports.updateProblem = void 0;
 const types_1 = require("../utils/types");
+const client_1 = require("@prisma/client");
 const aws_1 = require("../utils/aws");
 const rabbitmqClient_1 = require("../utils/rabbitmqClient");
+const catchAsync_1 = __importDefault(require("../utils/catchAsync"));
 const prisma = new client_1.PrismaClient();
 exports.updateProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
     // @ts-ignore
@@ -78,6 +78,19 @@ exports.accessProblem = (0, catchAsync_1.default)((req, res, next) => __awaiter(
             id: parseInt(req.params.id),
         },
     });
+    res.status(200).json({
+        status: "success",
+        data: {
+            problems,
+        },
+    });
+}));
+exports.getAllProblems = (0, catchAsync_1.default)((req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const problems = (yield prisma.problem.findMany({
+        orderBy: {
+            createdAt: "desc",
+        },
+    }));
     res.status(200).json({
         status: "success",
         data: {

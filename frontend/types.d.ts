@@ -1,5 +1,6 @@
 export type ProblemType = {
   id?: number
+  createdAt?: Date;
   difficulty?: "EASY" | "MEDIUM" | "HARD"
   title: string
   description: string
