@@ -7,6 +7,7 @@ export const defaultProblem: ProblemType = {
   inputFormat: "",
   outputFormat: "",
   constraints: "",
+  difficulty: "EASY"
 };
 
 export const dummyProblem: ProblemType = {

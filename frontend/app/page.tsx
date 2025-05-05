@@ -2,21 +2,21 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import { ProblemType } from "@/types";
 
+export const getDifficultyColor = (difficulty: string) => {
+  switch (difficulty) {
+    case "EASY":
+      return "bg-green-500"
+    case "MEDIUM":
+      return "bg-yellow-500"
+    case "HARD":
+      return "bg-red-500"
+    default:
+      return ""
+  }
+}
+
 const ProblemCard = ({problem}: {problem: ProblemType}) => {
   const {title, description, difficulty} = problem
-
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty) {
-      case "EASY":
-        return "bg-green-500"
-      case "MEDIUM":
-        return "bg-yellow-500"
-      case "HARD":
-        return "bg-red-500"
-      default:
-        return ""
-    }
-  }
 
   return (
     <Link href={`/problems/${problem.id}`} className="w-full">

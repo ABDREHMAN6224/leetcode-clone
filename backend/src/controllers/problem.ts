@@ -76,7 +76,7 @@ export const createProblem = catchAsync(
 
 export const accessProblem = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
-    const problems = await prisma.problem.findUnique({
+    const problem = await prisma.problem.findUnique({
       where: {
         // @ts-ignore
         id: parseInt(req.params.id),
@@ -85,7 +85,7 @@ export const accessProblem = catchAsync(
     res.status(200).json({
       status: "success",
       data: {
-        problems,
+        problem,
       },
     });
   }
