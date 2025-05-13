@@ -33,7 +33,7 @@ const initialCode = (sig: string, ins: string, outs: string) => {
   const args = convert(ins)
   const returns = convert(outs)
 
-  return `const ${sig} = (${args.join(", ")}) => {
+  return `function ${sig}(${args.join(", ")}){
   // TODO: return ${returns.length === 1 ? returns[0] : `[${returns.join(", ")}]`}
 }`
 }

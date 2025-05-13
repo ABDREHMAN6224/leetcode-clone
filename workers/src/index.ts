@@ -66,7 +66,7 @@ async function compareResults(problemId: number, userId: number,submissionId:num
     console.log("Final Results:", finalResults);
 
   client.publish(
-    `results-${userId}`,
+    `results-${problemId}`,
     JSON.stringify({ problemId, status, results: finalResults,submissionId})
   );
 }
@@ -135,7 +135,7 @@ async function processSubmission(submission: string) {
       console.error("Error occurred while running the container:", stdout);
 
       client.publish(
-        `results-${userId}`,
+        `results-${problemId}`,
         JSON.stringify({
           submissionId,
           problemId,
@@ -152,7 +152,7 @@ async function processSubmission(submission: string) {
     console.error("Error during container execution:", error.message);
 
     client.publish(
-      `results-${userId}`,
+      `results-${problemId}`,
       JSON.stringify({
         submissionId,
         problemId,

@@ -25,7 +25,6 @@ export class SubscriptionManager {
         if(this.subscriptions.get(user)?.includes(subscription)) return
         this.subscriptions.set(user,(this.subscriptions.get(user)||[]).concat(subscription))
         this.reverseSubscriptions.set(subscription,(this.reverseSubscriptions.get(subscription)||[]).concat(user))
-        console.log(this.reverseSubscriptions,this.subscriptions);
         if (this.reverseSubscriptions.get(subscription)?.length === 1) {
             this.redisClient.subscribe(subscription, this.redisCallbackHandler);
         }

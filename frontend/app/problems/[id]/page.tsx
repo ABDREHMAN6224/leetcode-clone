@@ -8,17 +8,43 @@ import { defaultProblem } from '@/lib/constants'
 import { formatDate } from 'date-fns'
 import { getDifficultyColor } from '@/app/page'
 import { useParams } from 'next/navigation'
+import { useSocket } from '@/app/utils/SokcetContext'
+
+let sending=false
 
 export default function Problem() {
   const params = useParams<{ id: string }>()
   const [problem, setProblem] = useState(defaultProblem)
   const [code, setCode] = useState("")
+  const { sendMessage } = useSocket()
 
   useEffect(() => {
     const fetchProblem = async () => {
       const { problem } = (await (await fetch(`http://localhost:3000/api/problems/${params.id}`)).json()).data
+      console.log(problem)
       setProblem({...problem})
+      sendMessage(JSON.stringify({ type: "subscribe", payload: params.id }))
     }
+    if(!sending){
+      sending=true
+      setTimeout(async () => {
+        const code =`function getSumOfSquares(arg1, arg2){
+          // TODO: return arg3
+          return arg1*arg1
+          }`
+          const problemId = Number(params.id);
+          const language = "JAVASCRIPT";
+          const response = await fetch("http://localhost:3000/api/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ code, problemId, language }),
+      });
+      console.log((await response.json()).data)
+      
+    }, 5000)
+  }
 
     fetchProblem()
   }, [params.id])

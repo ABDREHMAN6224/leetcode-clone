@@ -67,7 +67,7 @@ function compareResults(problemId, userId, submissionId, results) {
             ? "ACCEPTED"
             : "WRONG_ANSWER";
         console.log("Final Results:", finalResults);
-        client.publish(`results-${userId}`, JSON.stringify({ problemId, status, results: finalResults, submissionId }));
+        client.publish(`results-${problemId}`, JSON.stringify({ problemId, status, results: finalResults, submissionId }));
     });
 }
 function processSubmission(submission) {
@@ -120,7 +120,7 @@ function processSubmission(submission) {
             const { StatusCode } = yield container.wait();
             if (StatusCode !== 0) {
                 console.error("Error occurred while running the container:", stdout);
-                client.publish(`results-${userId}`, JSON.stringify({
+                client.publish(`results-${problemId}`, JSON.stringify({
                     submissionId,
                     problemId,
                     status: "RUNTIME_ERROR",
@@ -135,7 +135,7 @@ function processSubmission(submission) {
         }
         catch (error) {
             console.error("Error during container execution:", error.message);
-            client.publish(`results-${userId}`, JSON.stringify({
+            client.publish(`results-${problemId}`, JSON.stringify({
                 submissionId,
                 problemId,
                 status: error.message === "Timeout" ? "TIME_LIMIT_EXCEEDED" : "RUNTIME_ERROR",
