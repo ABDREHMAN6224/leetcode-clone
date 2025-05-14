@@ -50,6 +50,7 @@ export const Editor = ({ code, setCode, functionSignature, inputFormat, outputFo
       viewRef.current.destroy()
     }
 
+    setCode(initialCode(functionSignature, inputFormat, outputFormat))
     const updateListener = EditorView.updateListener.of((v) => {
       if (v.docChanged) {
         setCode(v.state.doc.toString())
@@ -72,6 +73,15 @@ export const Editor = ({ code, setCode, functionSignature, inputFormat, outputFo
       viewRef.current?.destroy()
     }
   }, [functionSignature])
+
+  useEffect(() => {
+    if (code === "" && viewRef.current) {
+      const newDoc = initialCode(functionSignature, inputFormat, outputFormat)
+      viewRef.current.dispatch({
+        changes: { from: 0, to: viewRef.current.state.doc.length, insert: newDoc }
+      })
+    }
+  }, [code])
 
   return (
     <div className='size-full'>

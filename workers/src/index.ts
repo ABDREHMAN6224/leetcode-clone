@@ -1,9 +1,10 @@
-import { createClient } from "redis";
+import amqp, { Channel } from "amqplib";
+
 import Docker from "dockerode";
+import { createClient } from "redis";
+import dotenv from "dotenv";
 import fs from "fs";
 import { s3 } from "./aws";
-import dotenv from "dotenv";
-import amqp, { Channel } from "amqplib";
 dotenv.config();
 
 const docker = new Docker();
@@ -157,7 +158,7 @@ async function processSubmission(submission: string) {
         submissionId,
         problemId,
         status: error.message === "Timeout" ? "TIME_LIMIT_EXCEEDED" : "RUNTIME_ERROR",
-        results: error.message,
+        results: error.message === "Timeout" ? "Your Program took too much time to run\nTry Optimizing the code a bit!" : error.message,
       })
     );
   } finally {
