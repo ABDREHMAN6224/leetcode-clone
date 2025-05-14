@@ -82,10 +82,38 @@ export const accessProblem = catchAsync(
         id: parseInt(req.params.id),
       },
     });
+
+    if (!problem) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Problem not found",
+      });
+    }
+    const test_input_file = "input.txt"
+    const test_output_file = "output.txt"
+
+    
+
+    const test_inputs = (await s3.getObject({
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Key: `problems/${problem.id}/${test_input_file}`,
+    }).promise()).Body?.toString().split("\n") || [];
+    const test_outputs = (await s3.getObject({
+      Bucket: process.env.AWS_BUCKET_NAME!,
+      Key: `problems/${problem.id}/${test_output_file}`,
+    }).promise()).Body?.toString().split("\n") || [];
+
+    const testCases = test_inputs.map((input, index) => ({
+      input: input.trim(),
+      output: test_outputs[index]?.trim() || "",
+    }));
+    console.log({testCases})
+
     res.status(200).json({
       status: "success",
       data: {
         problem,
+        testCases,
       },
     });
   }

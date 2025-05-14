@@ -13,6 +13,8 @@ services:
       - DATABASE_URL=postgres://postgres:postgres@postgres:5432/postgres
       - RABBITMQ_URL=amqp://rabbitmq:5672
       - REDIS_URL=redis://redis:6379/0
+      
+  
     depends_on:
       - postgres
       - rabbitmq

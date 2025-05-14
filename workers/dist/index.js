@@ -12,12 +12,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-const redis_1 = require("redis");
+const amqplib_1 = __importDefault(require("amqplib"));
 const dockerode_1 = __importDefault(require("dockerode"));
+const redis_1 = require("redis");
+const dotenv_1 = __importDefault(require("dotenv"));
 const fs_1 = __importDefault(require("fs"));
 const aws_1 = require("./aws");
-const dotenv_1 = __importDefault(require("dotenv"));
-const amqplib_1 = __importDefault(require("amqplib"));
 dotenv_1.default.config();
 const docker = new dockerode_1.default();
 const TIMEOUT = 5000;
@@ -139,7 +139,7 @@ function processSubmission(submission) {
                 submissionId,
                 problemId,
                 status: error.message === "Timeout" ? "TIME_LIMIT_EXCEEDED" : "RUNTIME_ERROR",
-                results: error.message,
+                results: error.message === "Timeout" ? "Your Program took too much time to run\nTry Optimizing the code a bit!" : error.message,
             }));
         }
         finally {

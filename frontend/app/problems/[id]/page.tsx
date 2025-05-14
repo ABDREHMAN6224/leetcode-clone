@@ -30,8 +30,9 @@ export default function Problem() {
 
   useEffect(() => {
     const fetchProblem = async () => {
-      const { problem } = (await (await fetch(`http://localhost:3000/api/problems/${params.id}`)).json()).data
-      setProblem({...problem})
+      const { problem,testCases } = (await (await fetch(`http://localhost:3000/api/problems/${params.id}`)).json()).data
+      console.log(testCases)
+            setProblem({...problem})
       sendMessage(JSON.stringify({ type: "subscribe", payload: params.id }))
     }
     fetchProblem()
