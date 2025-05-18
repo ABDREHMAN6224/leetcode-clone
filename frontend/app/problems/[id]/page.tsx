@@ -25,14 +25,15 @@ export default function Problem() {
   const [code, setCode] = useState("")
   const [submissionPending, setSubmissionPending] = useState(false)
   const [terminalResponse, setTerminalResponse] = useState<TerminalResponseType | null>(null)
+  const [testCases, setTestCases] = useState<ResultType[]>([])
 
   const { sendMessage, socket } = useSocket()
 
   useEffect(() => {
     const fetchProblem = async () => {
-      const { problem,testCases } = (await (await fetch(`http://localhost:3000/api/problems/${params.id}`)).json()).data
-      console.log(testCases)
-            setProblem({...problem})
+      const { problem, testCases } = (await (await fetch(`http://localhost:3000/api/problems/${params.id}`)).json()).data
+      setTestCases(testCases)
+      setProblem({...problem})
       sendMessage(JSON.stringify({ type: "subscribe", payload: params.id }))
     }
     fetchProblem()
@@ -51,7 +52,6 @@ export default function Problem() {
 
 
   const submitSolution = async () => {
-    console.log({code})
     setSubmissionPending(true)
     await fetch("http://localhost:3000/api/submit", {
       method: "POST",
@@ -146,17 +146,23 @@ export default function Problem() {
                 <div className='flex flex-col gap-4 text-black'>
                   {terminalResponse.results.map(({input, output}, i) => (
                     <div key={i} className='flex gap-2 items-center'>
-                      <p className='bg-neutral-100 shadow p-1 rounded-md w-32 text-center'>{`Input: ${input}`}</p>
+                      <p className='bg-neutral-100 shadow p-1 rounded-md w-32 text-center'>{`Submitted: ${input}`}</p>
                       {"=>"}
-                      <p className='bg-neutral-100 shadow p-1 rounded-md w-32 text-center'>{`Output: ${output}`}</p>
+                      <p className='bg-neutral-100 shadow p-1 rounded-md w-32 text-center'>{`Expected: ${output}`}</p>
                     </div>
                   ))}
                 </div>}
                 </>
                 {/* <p style={{"whiteSpace": "pre-wrap"}}>{JSON.stringify({terminalResponse}, null, 2)}</p> */}
               </div>:
-              <div className='flex-1 flex flex-col gap-2 justify-center items-center'>
-                <p className='p-4 bg-neutral-300 rounded-md shadow'>Click on The Submit button to Check your Solution</p>
+              <div className='flex-1 flex flex-col gap-2'>
+                <p className='text-2xl font-bold'>Test Cases</p>
+                {testCases.map(({input, output}, i) => (
+                  <div key={i} className='flex gap-2'>
+                    <p className='shadow p-1 rounded-md w-32 text-center'>Input: <span className='font-bold'>{input}</span></p>
+                    <p className='shadow p-1 rounded-md w-32 text-center'>Output: <span className='font-bold'>{output}</span></p>
+                  </div>
+                ))}
               </div>}
             <div className='flex justify-end gap-4'>
               <Button variant={"secondary"} onClick={() => setCode("")}>Reset Code</Button>

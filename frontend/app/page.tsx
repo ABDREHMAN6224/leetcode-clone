@@ -19,8 +19,8 @@ const ProblemCard = ({problem}: {problem: ProblemType}) => {
   const {title, description, difficulty} = problem
 
   return (
-    <Link href={`/problems/${problem.id}`} className="w-full">
-      <Card className="w-full flex flex-col gap-2 p-4">
+    <Link href={`/problems/${problem.id}`} className="w-full min-h-32 h-full">
+      <Card className="size-full flex flex-col gap-2 p-4">
         <div className="flex items-center justify-between">
           <p className="font-bold text-2xl">{title}</p>
           {difficulty && <p className={`text-xs p-1 rounded-lg px-2 text-white font-bold ${getDifficultyColor(difficulty)}`}>{difficulty}</p>}
@@ -38,7 +38,7 @@ export default async function Home() {
   return (
     <div className="flex flex-col items-center justify-center gap-2 min-h-screen p-8">
       <h1 className="text-4xl font-bold">Problems</h1>
-      <div className="flex w-full flex-col gap-2">
+      <div className="grid w-full grid-cols-2 gap-2">
         {problems.map((problem: ProblemType) => (
           <ProblemCard key={problem.id} problem={problem} />
         ))}
