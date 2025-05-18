@@ -212,6 +212,7 @@ async function getCompletedCode(id: number, code: string, language: Language) {
 
 
   if (language === Language.JAVASCRIPT) {
+    console.log(test_inputs)
     return getJavascriptTemplate(code, test_inputs, problem);
   } else if (language === Language.PYTHON) {
     return getPythonTemplate(code, test_inputs, problem);

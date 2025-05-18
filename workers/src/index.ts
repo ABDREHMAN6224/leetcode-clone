@@ -52,7 +52,7 @@ async function compareResults(problemId: number, userId: number,submissionId:num
     })
     .promise();
 
-  const outputs = file.Body?.toString().split("\n") || [];
+  let outputs = (file.Body?.toString().split("\n") || []).filter(x=>x);
   const finalResults = outputs.map((output:any, index:number) => ({
     input: results[index],
     output: output.trim(),
