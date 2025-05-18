@@ -1,5 +1,5 @@
 import express from "express"
-import { accessProblem, createProblem, getAllProblems, submitProblem, updateProblem } from "../controllers/problem"
+import { accessProblem, createProblem, deleteAllProblems, getAllProblems, submitProblem, updateProblem } from "../controllers/problem"
 import multer from "multer";
 
 const router = express.Router()
@@ -11,5 +11,6 @@ router.post("/submit",submitProblem)
 router.put("/submissions/:id",updateProblem)
 router.get("/problems",getAllProblems)
 router.get("/problems/:id",accessProblem)
+router.delete("/delete-all",deleteAllProblems)
 
 export default router

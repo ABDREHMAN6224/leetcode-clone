@@ -11,6 +11,17 @@ const prisma = new PrismaClient();
 type Request2 = CustomRequest & { params: { id: string } };
 
 
+export const deleteAllProblems = catchAsync(
+  async (req: CustomRequest, res: Response, next: NextFunction) => {
+    req.user = 1;
+    await prisma.problem.deleteMany({});
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  }
+);
+
 export const updateProblem = catchAsync(async (req: Request2, res: Response, next: NextFunction) => {
   // @ts-ignore
   const {status} = req.body;
