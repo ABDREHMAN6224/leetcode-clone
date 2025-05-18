@@ -58,7 +58,7 @@ function compareResults(problemId, userId, submissionId, results) {
             Key: `problems/${problemId}/output.txt`,
         })
             .promise();
-        const outputs = ((_a = file.Body) === null || _a === void 0 ? void 0 : _a.toString().split("\n")) || [];
+        let outputs = (((_a = file.Body) === null || _a === void 0 ? void 0 : _a.toString().split("\n")) || []).filter(x => x);
         const finalResults = outputs.map((output, index) => ({
             input: results[index],
             output: output.trim(),
@@ -73,6 +73,7 @@ function compareResults(problemId, userId, submissionId, results) {
 function processSubmission(submission) {
     return __awaiter(this, void 0, void 0, function* () {
         const { problemId, userId, code, language, submissionId } = JSON.parse(submission);
+        console.log(`Processing submission for problem ${problemId} by user ${userId} in language ${language}`);
         const image = getImageForLanguage(language);
         const extension = getFileExtensionForLanguage(language);
         const command = getCommandForLanguage(language);
