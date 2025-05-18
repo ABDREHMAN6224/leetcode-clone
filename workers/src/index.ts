@@ -74,6 +74,7 @@ async function compareResults(problemId: number, userId: number,submissionId:num
 
 async function processSubmission(submission: string) {
   const { problemId, userId, code, language,submissionId } = JSON.parse(submission);
+  console.log(`Processing submission for problem ${problemId} by user ${userId} in language ${language}`);
   const image = getImageForLanguage(language);
   const extension = getFileExtensionForLanguage(language);
   const command = getCommandForLanguage(language);
