@@ -14,6 +14,8 @@ type Request2 = CustomRequest & { params: { id: string } };
 export const deleteAllProblems = catchAsync(
   async (req: CustomRequest, res: Response, next: NextFunction) => {
     req.user = 1;
+    // first delete all submissions related to the problems
+    await prisma.problemSubmission.deleteMany({});
     await prisma.problem.deleteMany({});
     res.status(204).json({
       status: "success",
